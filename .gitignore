@@ -1,0 +1,12 @@
+# フロント
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+
+# バック
+backend/.venv/
+backend/src/__pycache__/
+
+# 共通
+.env
+.DS_Store
