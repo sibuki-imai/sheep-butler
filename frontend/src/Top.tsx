@@ -1,12 +1,31 @@
 import React from "react";
-import Hamburger from "./icons/hamburger.svg?react";
+import Icon from "./icons/mainIcon.svg?react";
+import MenuList from "./shared/hamburgerButton/menuList";
 
 function Top() {
   return (
-    <div className="flex gap-4 items-center">
-      <Hamburger width={48} height={48} className="text-black" />
-      <Hamburger width={48} height={48} className="text-red-500" />
-      <Hamburger width={48} height={48} style={{ color: "#83A5C4" }} />
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "#eafff6",
+        transition: "transform 0.3s ease",
+      }}
+    >
+      <Icon
+        width={120}
+        height={120}
+        style={{
+          marginTop: "15px",
+          marginLeft: "25px",
+          cursor: "pointer",
+          color: "#83A5C4",
+        }}
+      />
+      <MenuList />
     </div>
   );
 }

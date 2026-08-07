@@ -13,10 +13,11 @@ import Communication from "./icons/communication.svg?react";
 import DailyNecessities from "./icons/dailyNecessities.svg?react";
 import Electricity from "./icons/electricity.svg?react";
 import TransportationExpenses from "./icons/transportationExpenses.svg?react";
-
+import HamburgerButton from "./shared/hamburgerButton/menu";
 function Test() {
   return (
     <div style={{ padding: 40 }}>
+      <HamburgerButton />
       <h1>テストページ</h1>
       <div className="bg-red-500 p-8 rounded-xl">TEST</div>
       <div className="flex gap-4 items-center">

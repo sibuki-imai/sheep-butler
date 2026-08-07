@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TopPage from "./Top";
+import Accounting from "./accounting/pages/InputPage";
 import TestPage from "./Test";
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<TopPage />} />
+        <Route path="/accounting" element={<Accounting />} />
         <Route path="/test" element={<TestPage />} />
       </Routes>
     </BrowserRouter>
