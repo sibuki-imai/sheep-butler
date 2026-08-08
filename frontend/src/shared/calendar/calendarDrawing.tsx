@@ -37,18 +37,183 @@ function DayDisplay({
 }
 
 /* ============================
+   年月ダイアルポップアップ
+   ============================ */
+function DayDisplayPopUp({
+  day,
+  onChange,
+  onClose,
+}: {
+  day: Date;
+  onChange: (d: Date) => void;
+  onClose: () => void;
+}) {
+  const MIN_YEAR = 2000;
+  const MAX_YEAR = 2100;
+  const yy = day.getFullYear();
+  const mm = day.getMonth() + 1;
+  /* ============================ 年を変更 ============================ */
+  const changeYear = (move: number) => {
+    const newYear = Math.min(MAX_YEAR, Math.max(MIN_YEAR, yy + move));
+    const newDate = new Date(day);
+    newDate.setFullYear(newYear);
+    onChange(newDate);
+  };
+  /* ============================ 月を変更 ============================ */
+  const changeMonth = (move: number) => {
+    let newMonth = mm + move;
+
+    // 12月 → 1月
+    if (newMonth > 12) {
+      newMonth = 1;
+    }
+    //  1月 → 12月
+    if (newMonth < 1) {
+      newMonth = 12;
+    }
+    const newDate = new Date(day.getFullYear(), newMonth - 1, 1);
+    onChange(newDate);
+  };
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 9999,
+      }}
+    >
+      {/* ============================ モーダル本体 ============================ */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: "#fff",
+          padding: "24px",
+          borderRadius: "12px",
+          width: "280px",
+          textAlign: "center",
+        }}
+      >
+        {" "}
+        {/* ============================ 年月ダイアル ============================ */}{" "}
+        <div style={{ display: "flex", justifyContent: "center", gap: "32px" }}>
+          {" "}
+          {/* ============================ 年 ============================ */}{" "}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            {" "}
+            {/* 前の年 */}{" "}
+            <button
+              onClick={() => changeYear(-1)}
+              disabled={yy <= MIN_YEAR}
+              style={{
+                fontSize: "20px",
+                width: "40px",
+                height: "32px",
+                cursor: yy <= MIN_YEAR ? "default" : "pointer",
+                opacity: yy <= MIN_YEAR ? 0.3 : 1,
+              }}
+            >
+              {" "}
+              ▲{" "}
+            </button>{" "}
+            {/* 現在の年 */}{" "}
+            <div
+              style={{ fontSize: "24px", fontWeight: "bold", minWidth: "90px" }}
+            >
+              {" "}
+              {yy}年{" "}
+            </div>{" "}
+            {/* 次の年 */}{" "}
+            <button
+              onClick={() => changeYear(1)}
+              disabled={yy >= MAX_YEAR}
+              style={{
+                fontSize: "20px",
+                width: "40px",
+                height: "32px",
+                cursor: yy >= MAX_YEAR ? "default" : "pointer",
+                opacity: yy >= MAX_YEAR ? 0.3 : 1,
+              }}
+            >
+              {" "}
+              ▼{" "}
+            </button>{" "}
+          </div>{" "}
+          {/* ============================ 月 ============================ */}{" "}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            {" "}
+            {/* 前の月 */}{" "}
+            <button
+              onClick={() => changeMonth(-1)}
+              style={{ fontSize: "20px", width: "40px", height: "32px" }}
+            >
+              {" "}
+              ▲{" "}
+            </button>{" "}
+            {/* 現在の月 */}{" "}
+            <div
+              style={{ fontSize: "24px", fontWeight: "bold", minWidth: "60px" }}
+            >
+              {" "}
+              {String(mm).padStart(2, "0")}月{" "}
+            </div>{" "}
+            {/* 次の月 */}{" "}
+            <button
+              onClick={() => changeMonth(1)}
+              style={{ fontSize: "20px", width: "40px", height: "32px" }}
+            >
+              {" "}
+              ▼{" "}
+            </button>{" "}
+          </div>{" "}
+        </div>{" "}
+        {/* ============================ 閉じるボタン ============================ */}
+        <button
+          onClick={onClose}
+          style={{ marginTop: "24px", padding: "8px 24px" }}
+        >
+          {" "}
+          閉じる{" "}
+        </button>{" "}
+      </div>{" "}
+    </div>
+  );
+}
+
+/* ============================
    カレンダー本体
    ============================ */
 function Calendar({
   day,
   onChange,
   onSelectDay,
-  isMobile,
+  onOpenPopUp,
 }: {
   day: Date;
   onChange: (d: Date) => void;
   onSelectDay?: () => void;
-  isMobile: boolean;
+  onOpenPopUp: () => void;
 }) {
   const anchorDay = day;
 
@@ -59,20 +224,25 @@ function Calendar({
   const firstDay = new Date(y, anchorDay.getMonth(), 1);
   const dow = firstDay.getDay();
 
-  // 月の日数
   // eslint-disable-next-line no-useless-assignment
   let maxDay = 0;
-  if ([1, 3, 5, 7, 8, 10, 12].includes(m)) maxDay = 31;
-  else if ([4, 6, 9, 11].includes(m)) maxDay = 30;
-  else {
+
+  if ([1, 3, 5, 7, 8, 10, 12].includes(m)) {
+    maxDay = 31;
+  } else if ([4, 6, 9, 11].includes(m)) {
+    maxDay = 30;
+  } else {
     maxDay = 28;
+
     if (y % 4 === 0) {
       maxDay = 29;
-      if (y % 100 === 0 && y % 400 !== 0) maxDay = 28;
+
+      if (y % 100 === 0 && y % 400 !== 0) {
+        maxDay = 28;
+      }
     }
   }
 
-  // カレンダー配列生成
   const calendarArr: number[][] = [];
   let cday = 1;
 
@@ -90,31 +260,49 @@ function Calendar({
     calendarArr.push(weeks);
   }
 
-  // 月移動
   const MonthMove = (move: boolean) => {
     const newMonth = anchorDay.getMonth() + (move ? 1 : -1);
     const newDate = new Date(anchorDay.getFullYear(), newMonth, 1);
+
     onChange(newDate);
   };
 
-  console.log("isMobile", isMobile);
+  const calendarWidth = 7 * 20 + 6 * 8;
+
   return (
-    <div style={{ userSelect: "none" }}>
+    <div
+      style={{
+        userSelect: "none",
+        width: `${calendarWidth}px`,
+      }}
+    >
       {/* 月移動 */}
       <div
         style={{
           display: "flex",
-          justifyContent: isMobile ? "center" : "flex-start",
           alignItems: "center",
-          gap: "16px",
+          width: "100%",
           marginBottom: "12px",
         }}
       >
-        <button onClick={() => MonthMove(false)}>＜</button>
+        {/* 年月（ポップアップを開く） */}
         <div>
-          {y}/{mm}
+          <button onClick={onOpenPopUp}>
+            {y}/{mm}
+          </button>
         </div>
-        <button onClick={() => MonthMove(true)}>＞</button>
+
+        {/* 月移動ボタン */}
+        <div
+          style={{
+            display: "flex",
+            marginLeft: "auto",
+            gap: "8px",
+          }}
+        >
+          <button onClick={() => MonthMove(false)}>＜</button>
+          <button onClick={() => MonthMove(true)}>＞</button>
+        </div>
       </div>
 
       {/* 曜日行 */}
@@ -122,7 +310,6 @@ function Calendar({
         style={{
           display: "flex",
           gap: "8px",
-          justifyContent: isMobile ? "center" : "flex-start",
           marginBottom: "8px",
         }}
       >
@@ -148,7 +335,6 @@ function Calendar({
             style={{
               display: "flex",
               gap: "8px",
-              justifyContent: isMobile ? "center" : "flex-start",
             }}
           >
             {week.map((d, di) => {
@@ -163,6 +349,7 @@ function Calendar({
                   style={{
                     width: "20px",
                     height: "20px",
+                    padding: 0,
                     textAlign: "center",
                     color: isAnchor ? "#ffffff" : "#181818",
                     borderRadius: "50%",
@@ -179,8 +366,9 @@ function Calendar({
                         ),
                       );
 
-                      // スマホなら閉じる
-                      if (onSelectDay) onSelectDay();
+                      if (onSelectDay) {
+                        onSelectDay();
+                      }
                     }
                   }}
                 >
@@ -201,34 +389,37 @@ function Calendar({
 function CalendarDrawing() {
   const [anchorDay, setAnchorDay] = useState(new Date());
   const [open, setOpen] = useState(false);
+  const [openPopUp, setOpenPopUp] = useState(false);
 
   const isMobile = window.innerWidth < 768;
 
-  // PC の場合は常に open=true にする
   const shouldOpen = isMobile ? open : true;
 
   return (
     <div style={{ userSelect: "none" }}>
       <p>カレンダー</p>
 
-      {/* 日付表示部分（スマホはタップで展開、PCはただの表示） */}
       <DayDisplay
         day={anchorDay}
         onChange={setAnchorDay}
         onClick={isMobile ? () => setOpen(!open) : undefined}
-        style={{
-          display: "flex",
-          justifyContent: isMobile ? "center" : "flex-start",
-        }}
       />
 
-      {/* PCは常時表示、スマホは shouldOpen のときだけ表示 */}
       {shouldOpen && (
         <Calendar
           day={anchorDay}
           onChange={setAnchorDay}
           onSelectDay={isMobile ? () => setOpen(false) : undefined}
-          isMobile={isMobile}
+          onOpenPopUp={() => setOpenPopUp(true)}
+        />
+      )}
+
+      {/* 年月ポップアップ */}
+      {openPopUp && (
+        <DayDisplayPopUp
+          day={anchorDay}
+          onChange={setAnchorDay}
+          onClose={() => setOpenPopUp(false)}
         />
       )}
     </div>
