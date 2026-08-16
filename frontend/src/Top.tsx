@@ -11,7 +11,6 @@ function Top() {
         left: 0,
         width: "100vw",
         height: "100vh",
-        background: "#eafff6",
         transition: "transform 0.3s ease",
       }}
     >
