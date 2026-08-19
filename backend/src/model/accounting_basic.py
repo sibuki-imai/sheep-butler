@@ -20,8 +20,8 @@ class AccountingBasic(Base):
     __table_args__ = (
         UniqueConstraint(
             "user_id",
-            "display_order",
-            name="uq_accounting_basic_user_display_order",
+            "sort",
+            name="uq_accounting_basic_user_sort",
         ),
     )
 
@@ -51,7 +51,7 @@ class AccountingBasic(Base):
         nullable=False,
     )
 
-    display_order: Mapped[int] = mapped_column(
+    sort: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
     )

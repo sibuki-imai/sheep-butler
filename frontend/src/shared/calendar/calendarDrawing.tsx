@@ -417,10 +417,19 @@ function Calendar({
 /* ============================
    親コンポーネント（全体）
    ============================ */
-function CalendarDrawing() {
+function CalendarDrawing({
+  onSelectDate,
+}: {
+  onSelectDate: (d: Date) => void;
+}) {
   const [anchorDay, setAnchorDay] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [openPopUp, setOpenPopUp] = useState(false);
+
+  const handleChangeDay = (newDate: Date) => {
+    setAnchorDay(newDate);
+    onSelectDate(newDate);
+  };
 
   const isMobile = window.innerWidth < 768;
 
@@ -438,14 +447,14 @@ function CalendarDrawing() {
     >
       <DayDisplay
         day={anchorDay}
-        onChange={setAnchorDay}
+        onChange={handleChangeDay}
         onClick={isMobile ? () => setOpen(!open) : undefined}
       />
 
       {shouldOpen && (
         <Calendar
           day={anchorDay}
-          onChange={setAnchorDay}
+          onChange={handleChangeDay}
           onSelectDay={isMobile ? () => setOpen(false) : undefined}
           onOpenPopUp={() => setOpenPopUp(true)}
         />
@@ -455,7 +464,7 @@ function CalendarDrawing() {
       {openPopUp && (
         <DayDisplayPopUp
           day={anchorDay}
-          onChange={setAnchorDay}
+          onChange={handleChangeDay}
           onClose={() => setOpenPopUp(false)}
         />
       )}

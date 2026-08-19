@@ -1,19 +1,17 @@
 import React from "react";
 import MainIcon from "./icons/mainIcon.svg?react";
 import Hamburger from "./icons/hamburger.svg?react";
-import Home from "./icons/home.svg?react";
-import Flame from "./icons/flame.svg?react";
-import Saving from "./icons/saving.svg?react";
-import PoletMoney from "./icons/pocketMoney.svg?react";
-import Hospital from "./icons/hospital.svg?react";
-import Water from "./icons/water.svg?react";
-import Study from "./icons/study.svg?react";
-import Beauty from "./icons/beauty.svg?react";
-import Communication from "./icons/communication.svg?react";
-import DailyNecessities from "./icons/dailyNecessities.svg?react";
-import Electricity from "./icons/electricity.svg?react";
-import TransportationExpenses from "./icons/transportationExpenses.svg?react";
+import Home from "./icons/categoryIcons/home.svg?react";
+import Flame from "./icons/categoryIcons/flame.svg?react";
+import Hospital from "./icons/categoryIcons/hospital.svg?react";
+import Water from "./icons/categoryIcons/water.svg?react";
+import Beauty from "./icons/categoryIcons/beauty.svg?react";
+import Communication from "./icons/categoryIcons/communication.svg?react";
+import DailyNecessities from "./icons/categoryIcons/dailyNecessities.svg?react";
+import Electricity from "./icons/categoryIcons/electricity.svg?react";
+import TransportationExpenses from "./icons/categoryIcons/train.svg?react";
 import HamburgerButton from "./shared/hamburgerButton/menu";
+import PigBank from "./icons/categoryIcons/pigBank.svg?react";
 function Test() {
   return (
     <div style={{ padding: 40 }}>
@@ -42,14 +40,9 @@ function Test() {
         <Flame width={48} height={48} style={{ color: "hotpink" }} />
       </div>
       <div className="flex gap-4 items-center">
-        <Saving width={48} height={48} className="text-black" />
-        <Saving width={48} height={48} className="text-red-500" />
-        <Saving width={48} height={48} style={{ color: "hotpink" }} />
-      </div>
-      <div className="flex gap-4 items-center">
-        <PoletMoney width={48} height={48} className="text-black" />
-        <PoletMoney width={48} height={48} className="text-red-500" />
-        <PoletMoney width={48} height={48} style={{ color: "hotpink" }} />
+        <PigBank width={48} height={48} className="text-black" />
+        <PigBank width={48} height={48} className="text-red-500" />
+        <PigBank width={48} height={48} style={{ color: "hotpink" }} />
       </div>
       <div className="flex gap-4 items-center">
         <Hospital width={48} height={48} className="text-black" />
@@ -61,12 +54,6 @@ function Test() {
         <Water width={48} height={48} className="text-red-500" />
         <Water width={48} height={48} style={{ color: "hotpink" }} />
       </div>
-      <div className="flex gap-4 items-center">
-        <Study width={48} height={48} className="text-black" />
-        <Study width={48} height={48} className="text-red-500" />
-        <Study width={48} height={48} style={{ color: "hotpink" }} />
-      </div>
-
       <div className="flex gap-4 items-center">
         <Beauty width={48} height={48} className="text-black" />
         <Beauty width={48} height={48} className="text-red-500" />

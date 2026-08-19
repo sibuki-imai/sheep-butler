@@ -26,3 +26,20 @@ class Firebase:
         session_cookie = auth.create_session_cookie(id_token, expires_in)
 
         return session_cookie, expires_in
+
+    # Firebase セッションチェック
+    def session_check(self, session_cookie: str | None):
+        if session_cookie is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Firebase ID token",
+            )
+
+        try:
+            decoded = auth.verify_session_cookie(session_cookie, check_revoked=True)
+            return decoded["uid"]
+        except Exception:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Firebase ID token",
+            )
