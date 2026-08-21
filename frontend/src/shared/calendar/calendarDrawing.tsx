@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import DayBox from "./dayBox";
+import ArrowLeft from "../../icons/arrowLeft.svg?react";
+import ArrowRight from "../../icons/arrowRight.svg?react";
 
 const dayOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -22,16 +25,44 @@ function DayDisplay({
     onChange(newDate);
   };
 
+  const dateLabel =
+    `${day.getFullYear()}/` +
+    `${String(day.getMonth() + 1).padStart(2, "0")}/` +
+    `${String(day.getDate()).padStart(2, "0")}（${dayOfWeek[day.getDay()]}）`;
   return (
-    <div style={{ userSelect: "none", ...style }}>
-      <button onClick={() => DayMove(false)}>＜</button>
-
-      <button onClick={onClick}>
-        {day.getFullYear()}/{String(day.getMonth() + 1).padStart(2, "0")}/
-        {String(day.getDate()).padStart(2, "0")}（{dayOfWeek[day.getDay()]}）
+    <div
+      style={{
+        userSelect: "none",
+        display: "flex",
+        alignItems: "center",
+        ...style,
+      }}
+    >
+      <button onClick={() => DayMove(false)}>
+        <ArrowLeft
+          width={50}
+          height={50}
+          style={{
+            color: "#181818",
+          }}
+        />
       </button>
 
-      <button onClick={() => DayMove(true)}>＞</button>
+      <button onClick={onClick}>
+        <DayBox dayString={dateLabel} />
+        {/* {day.getFullYear()}/{String(day.getMonth() + 1).padStart(2, "0")}/
+        {String(day.getDate()).padStart(2, "0")}（{dayOfWeek[day.getDay()]}） */}
+      </button>
+
+      <button onClick={() => DayMove(true)}>
+        <ArrowRight
+          width={50}
+          height={50}
+          style={{
+            color: "#181818",
+          }}
+        />
+      </button>
     </div>
   );
 }
@@ -386,29 +417,44 @@ function Calendar({
 /* ============================
    親コンポーネント（全体）
    ============================ */
-function CalendarDrawing() {
+function CalendarDrawing({
+  onSelectDate,
+}: {
+  onSelectDate: (d: Date) => void;
+}) {
   const [anchorDay, setAnchorDay] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [openPopUp, setOpenPopUp] = useState(false);
+
+  const handleChangeDay = (newDate: Date) => {
+    setAnchorDay(newDate);
+    onSelectDate(newDate);
+  };
 
   const isMobile = window.innerWidth < 768;
 
   const shouldOpen = isMobile ? open : true;
 
   return (
-    <div style={{ userSelect: "none" }}>
-      <p>カレンダー</p>
-
+    <div
+      style={{
+        userSelect: "none",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
       <DayDisplay
         day={anchorDay}
-        onChange={setAnchorDay}
+        onChange={handleChangeDay}
         onClick={isMobile ? () => setOpen(!open) : undefined}
       />
 
       {shouldOpen && (
         <Calendar
           day={anchorDay}
-          onChange={setAnchorDay}
+          onChange={handleChangeDay}
           onSelectDay={isMobile ? () => setOpen(false) : undefined}
           onOpenPopUp={() => setOpenPopUp(true)}
         />
@@ -418,7 +464,7 @@ function CalendarDrawing() {
       {openPopUp && (
         <DayDisplayPopUp
           day={anchorDay}
-          onChange={setAnchorDay}
+          onChange={handleChangeDay}
           onClose={() => setOpenPopUp(false)}
         />
       )}

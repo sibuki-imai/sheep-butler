@@ -5,7 +5,10 @@ frontend/dist/
 
 # バック
 backend/.venv/
-backend/src/__pycache__/
+backend/.env/
+backend/**/__pycache__/
+backend/src/utils/firebase-service-account.json
+
 
 # 共通
 .env

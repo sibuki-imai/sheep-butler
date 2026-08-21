@@ -1,10 +1,29 @@
 import HamburgerButton from "../../shared/hamburgerButton/menu";
+import { Link } from "react-router-dom";
+import Pen from "../../icons/pen.svg?react";
 
 function AccountingHeader() {
   return (
     <div>
-      <HamburgerButton />
-      <div className="flex gap-4 items-center"></div>
+      <div className="flex gap-4 items-center">
+        <HamburgerButton />
+        <Link
+          to={"/accounting"}
+          className="flex flex-col items-center"
+          style={{ marginTop: "15px" }}
+        >
+          <Pen width={35} height={35} style={{ color: "#1976D2" }} />
+          <div style={{ fontSize: "10px" }}>入力</div>
+        </Link>
+      </div>
+
+      <div
+        style={{
+          borderBottom: "2px solid #181818",
+          width: "95%",
+          marginLeft: "2.5%",
+        }}
+      />
     </div>
   );
 }
