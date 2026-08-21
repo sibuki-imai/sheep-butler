@@ -5,42 +5,121 @@ import TextBox from "../../shared/textBox/textBox";
 import SendButton from "../../icons/send.svg?react";
 import CategoryGrid from "../components/categoryList";
 import axios from "axios";
+import { ResultPopup } from "../../shared/resultPopup/resultPopup";
 
 function InputPage() {
   const [money, setMoney] = useState("");
   const [memo, setMemo] = useState("");
+  const [itemName, setItemName] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [categories, setCategories] = useState([]);
+  const [popupStatus, setPopupStatus] = useState<number | null>(null);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
   const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${BE_ENDPOINT}/account`, {
+        const res = await axios.get(`${BE_ENDPOINT}/accounting`, {
           withCredentials: true,
         });
-        console.log("res", res);
         setCategories(res.data);
       } catch (e) {
-        console.error(e);
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          setPopupStatus(401);
+          setPopupMessage("再ログインが必要です");
+          return;
+        }
+
+        // その他のエラー
+        setPopupStatus(500);
+        setPopupMessage("エラーが発生しました");
       }
     };
 
     fetchCategories();
   }, []);
 
-  const sendPush = () => {
-    console.log("date:", selectedDate);
-    console.log("money:", money);
-    console.log("category:", selectedCategory);
-    console.log("memo:", memo);
+  const sendPush = async () => {
+    try {
+      if (Number(money) == 0 || selectedCategory == null) {
+        if (Number(money) == 0 && selectedCategory == null) {
+          throw new Error("金額とカテゴリが入力されていません");
+        } else if (Number(money) == 0) {
+          throw new Error("金額が入力されていません");
+        } else {
+          throw new Error("カテゴリが入力されていません");
+        }
+      }
+
+      await axios.post(
+        `${BE_ENDPOINT}/accounting/recod`,
+        {
+          accounting_basic_id: selectedCategory,
+          amount: Number(money),
+          purchase_date: (selectedDate ?? new Date())
+            .toISOString()
+            .split("T")[0],
+          item_name: itemName,
+          memo: memo,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      setPopupStatus(200);
+      setPopupMessage("登録が完了しました");
+      // ★ フォームをクリア
+      setMoney("");
+      setMemo("");
+      setItemName("");
+      setSelectedCategory(null);
+    } catch (e) {
+      console.log("e", e);
+      if (axios.isAxiosError(e)) {
+        const detail = e.response?.data?.detail;
+
+        // detail が配列 or オブジェクトの場合に文字列化
+        const errorMessage =
+          typeof detail === "string"
+            ? detail
+            : Array.isArray(detail)
+              ? detail.map((d) => d.msg).join(" / ")
+              : "不明なエラーです";
+        setPopupStatus(e.response?.status ?? 500);
+        setPopupMessage(errorMessage);
+      } else {
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          setPopupStatus(401);
+          setPopupMessage("再ログインが必要です");
+          return;
+        }
+        if (e instanceof Error) {
+          setPopupStatus(400);
+          setPopupMessage(e.message);
+          return;
+        }
+        setPopupStatus(500);
+        setPopupMessage("不明なエラーです");
+      }
+    }
   };
 
   return (
     <div style={{ width: "100%", paddingBottom: "200px" }}>
+      {popupStatus !== null && (
+        <ResultPopup
+          status={popupStatus}
+          message={popupMessage ?? undefined}
+          onClose={() => setPopupStatus(null)}
+        />
+      )}
       <Header />
       <div
         style={{
@@ -124,6 +203,22 @@ function InputPage() {
         </div>
       </div>
       {/* ============================
+          商品名欄
+          ============================ */}
+      <div
+        style={{
+          width: "80%",
+          marginLeft: "10%",
+        }}
+      >
+        <TextBox
+          label="商品名"
+          value={itemName}
+          onChange={setItemName}
+          type="text"
+        />
+      </div>
+      {/* ============================
           メモ欄
           ============================ */}
       <div
@@ -152,7 +247,7 @@ function InputPage() {
           left: "50%", // 中央寄せの基準
           justifyContent: "center",
           transform: "translateX(-50%)", // 中央にする
-          zIndex: 9999, // 他の要素より前に出す
+          zIndex: 999, // 他の要素より前に出す
         }}
         onClick={sendPush}
       >

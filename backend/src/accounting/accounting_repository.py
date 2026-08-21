@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from src.model.accounting_basic import AccountingBasic
+from src.model.accounting_record import AccountingRecord
+from src.schema.accounting_schema import AccountingBasicUpdate
 
 # from src.schema.accounting_schema import AccountingBasicCreate
 
@@ -106,3 +108,39 @@ class AccountingRepository:
             .order_by(AccountingBasic.sort)
         )
         return self.session.execute(stmt).scalars().all()
+
+    # カテゴリIDを指定して取得
+    async def CategoryOneGet(self, accounting_basic_id: str):
+        stmt = select(AccountingBasic).where(AccountingBasic.id == accounting_basic_id)
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    # カテゴリIDを指定してアップデート
+    async def CategoryUpdate(self, id: str, data: AccountingBasicUpdate):
+        category = (
+            self.session.query(AccountingBasic).filter(AccountingBasic.id == id).first()
+        )
+
+        if category is None:
+            raise Exception("Category not found")
+
+        update_data = data.model_dump(exclude_none=True)
+        for key, value in update_data.items():
+            setattr(category, key, value)
+
+        self.session.flush()
+        return
+
+    # レコードの作成
+    async def RecordPost(self, new_data: AccountingRecord):
+        recod = AccountingRecord(
+            user_id=new_data.user_id,
+            accounting_basic_id=new_data.accounting_basic_id,
+            amount=new_data.amount,
+            purchase_date=new_data.purchase_date,
+            item_name=new_data.item_name,
+            memo=new_data.memo,
+        )
+
+        self.session.add(recod)
+        self.session.flush()
+        return recod
