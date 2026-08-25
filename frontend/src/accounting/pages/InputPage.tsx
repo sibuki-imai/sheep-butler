@@ -56,7 +56,7 @@ function InputPage() {
       }
 
       await axios.post(
-        `${BE_ENDPOINT}/accounting/recod`,
+        `${BE_ENDPOINT}/accounting/record`,
         {
           accounting_basic_id: selectedCategory,
           amount: Number(money),
@@ -120,7 +120,7 @@ function InputPage() {
           onClose={() => setPopupStatus(null)}
         />
       )}
-      <Header />
+      <Header type="input" />
       <div
         style={{
           display: "flex",

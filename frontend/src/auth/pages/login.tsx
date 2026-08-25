@@ -19,7 +19,6 @@ function Login() {
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
-    console.log("result", result);
     const idToken = await result.user.getIdToken();
     await login(idToken);
   };

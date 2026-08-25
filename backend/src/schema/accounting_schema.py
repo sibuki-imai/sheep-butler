@@ -22,9 +22,15 @@ class AccountingBasicUpdate(BaseModel):
     remaining_balance: Optional[int] = None
 
 
-class AccountingRecodPost(BaseModel):
+class AccountingRecordPost(BaseModel):
     accounting_basic_id: str
     amount: int
     purchase_date: date
     item_name: Optional[str] = None
     memo: Optional[str] = None
+
+
+class RecordQuery(BaseModel):
+    date: str | None
+    category: str | None
+    detail: bool | None

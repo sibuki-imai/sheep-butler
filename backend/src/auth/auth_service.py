@@ -14,8 +14,8 @@ class AuthService:
 
     def login(self, id_token: str):
         # id_token
-        decoded_token = self.firebase.verify_id_token(id_token)
-        uid = decoded_token["uid"]
+        decorded_token = self.firebase.verify_id_token(id_token)
+        uid = decorded_token["uid"]
 
         # DB確認
         user = self.repo.find_user(uid)

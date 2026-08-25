@@ -5,3 +5,4 @@ psycopg[binary]
 alembic
 requests
 firebase-admin
+python-dateutil
