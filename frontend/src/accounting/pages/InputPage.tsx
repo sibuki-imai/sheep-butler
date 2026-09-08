@@ -4,6 +4,7 @@ import Header from "../components/header";
 import TextBox from "../../shared/textBox/textBox";
 import SendButton from "../../icons/send.svg?react";
 import CategoryGrid from "../components/categoryList";
+import FormatDate from "../components/formatDate";
 import axios from "axios";
 import { ResultPopup } from "../../shared/resultPopup/resultPopup";
 
@@ -60,9 +61,7 @@ function InputPage() {
         {
           accounting_basic_id: selectedCategory,
           amount: Number(money),
-          purchase_date: (selectedDate ?? new Date())
-            .toISOString()
-            .split("T")[0],
+          purchase_date: FormatDate(selectedDate ?? new Date()),
           item_name: itemName,
           memo: memo,
         },
@@ -140,7 +139,7 @@ function InputPage() {
             marginTop: "15px",
           }}
         >
-          <CalendarDrawing onSelectDate={setSelectedDate} />
+          <CalendarDrawing onSelectDate={setSelectedDate} openSelect={false} />
         </div>
 
         <div
@@ -162,7 +161,7 @@ function InputPage() {
             >
               <div
                 style={{
-                  width: isMobile ? "80%" : "50%",
+                  width: isMobile ? "75%" : "50%",
                   marginLeft: "15%",
                   // display: "flex",
                 }}

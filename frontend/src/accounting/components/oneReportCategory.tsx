@@ -1,6 +1,8 @@
-// import React, { useState } from "react";
+import React, { useState } from "react";
 import { IconMap } from "./iconIndex";
 import BackLogo from "../../icons/backLogo.svg?react";
+import ArrowRight from "../../icons/arrowRight.svg?react";
+import RecordModal from "./recordModal";
 
 type Category = {
   id: string;
@@ -23,25 +25,33 @@ type Record = {
 type Props = {
   categorieInfo: Category | null;
   recordDate: Record[];
-  onSelectCategory: (id: string) => void;
   onBack: () => void;
+  onSaveRecord: (updated: Record) => void;
+  onDeleteRecord: (id: string) => void;
 };
 
 const isMobile = window.innerWidth < 768;
 
-function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
+function OneReportCategory({
+  categorieInfo,
+  recordDate,
+  onBack,
+  onSaveRecord,
+  onDeleteRecord,
+}: Props) {
   const view = isMobile ? 1 : 2;
   const height = isMobile ? "350px" : "280px";
   const iconName = categorieInfo ? categorieInfo.icon : "refresh";
   const IconComponent = IconMap[iconName];
+  const categorieId = categorieInfo ? categorieInfo.id : "00000";
   const collar = categorieInfo ? categorieInfo.collar : "#000";
   const categoryName = categorieInfo ? categorieInfo.name : "---";
   const remaining = categorieInfo
     ? Number(categorieInfo.remaining_balance).toLocaleString()
     : "---";
-
-  console.log("categorieInfo", categorieInfo);
-  console.log("recordDate", recordDate);
+  const [selected, setSelected] = useState<Record | null>(null);
+  const categoryInfo = { categorieId, iconName, categoryName, collar };
+  const sliceSize = isMobile ? 7 : 20;
 
   return (
     <div>
@@ -105,7 +115,7 @@ function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
             alignItems: "center",
           }}
         >
-          <div style={{ textAlign: "right", marginRight: "3%" }}> 予 算 :</div>
+          <div style={{ textAlign: "right", marginRight: "3%" }}> 残 高 :</div>
           <div>{remaining}円</div>
         </div>
       </div>
@@ -114,7 +124,7 @@ function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
       <div
         style={{
           height: height,
-          overflowY: "auto",
+          // overflowY: "auto",
           padding: "10px",
         }}
       >
@@ -142,10 +152,9 @@ function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
                       cursor: "pointer",
                       transition: "all 0.2s ease",
                     }}
-                    // onClick={() => {
-                    //   setSelected(item.id);
-                    //   onSelectCategory(item.id);
-                    // }}
+                    onClick={() => {
+                      setSelected(record);
+                    }}
                   >
                     <div
                       style={{
@@ -161,6 +170,7 @@ function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
                       <div style={{ width: "15%" }}>
                         {record.purchase_date.slice(5, 10).replace("-", "/")}
                       </div>
+
                       <div
                         style={{
                           marginLeft: "3%",
@@ -170,10 +180,23 @@ function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
                       >
                         {Number(record.amount).toLocaleString()} 円
                       </div>
+
                       <div style={{ marginLeft: "3%" }}>
-                        {record.item_name.length > 7
-                          ? record.item_name.slice(0, 7) + "..."
+                        {record.item_name.length > sliceSize
+                          ? record.item_name.slice(0, sliceSize) + "..."
                           : record.item_name}
+                      </div>
+
+                      {/* 右寄せ枠 */}
+                      <div
+                        style={{
+                          marginLeft: "auto",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                        }}
+                      >
+                        <ArrowRight width={30} height={25} />
                       </div>
                     </div>
                   </button>
@@ -181,6 +204,22 @@ function OneReportCategory({ categorieInfo, recordDate, onBack }: Props) {
               })
             : []}
         </div>
+        {selected && (
+          <RecordModal
+            categoryInfo={categoryInfo}
+            record={selected}
+            onClose={() => setSelected(null)}
+            onSave={(updated) => {
+              updated.id = selected.id;
+              onSaveRecord(updated);
+              setSelected(null);
+            }}
+            onDelete={(id) => {
+              onDeleteRecord(id);
+              setSelected(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -30,6 +30,27 @@ class AccountingRecordPost(BaseModel):
     memo: Optional[str] = None
 
 
+class AccountingRecordPatch(BaseModel):
+    id: str
+    accounting_basic_id: str
+    amount: int
+    purchase_date: date
+    item_name: Optional[str] = None
+    memo: Optional[str] = None
+
+
+class AccountingRecordUpdate(BaseModel):
+    accounting_basic_id: Optional[str] = None
+    amount: int
+    purchase_date: date
+    item_name: Optional[str] = None
+    memo: Optional[str] = None
+
+
+class AccountingRecordDelete(BaseModel):
+    id: str
+
+
 class RecordQuery(BaseModel):
     date: str | None
     category: str | None

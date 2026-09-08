@@ -6,6 +6,7 @@ from sqlalchemy import func
 from src.model.accounting_basic import AccountingBasic
 from src.model.accounting_record import AccountingRecord
 from src.schema.accounting_schema import AccountingBasicUpdate
+from src.schema.accounting_schema import AccountingRecordUpdate
 
 # from src.schema.accounting_schema import AccountingBasicCreate
 
@@ -20,7 +21,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="食費",
-                icon="icon",
+                icon="food",
                 collar="#0877D7",
                 sort=1,
                 fixed_money=30000,
@@ -29,7 +30,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="日用品費",
-                icon="icon",
+                icon="dailyNecessities",
                 collar="#0877D7",
                 sort=2,
                 fixed_money=30000,
@@ -38,7 +39,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="家賃",
-                icon="icon",
+                icon="fome",
                 collar="#0877D7",
                 sort=3,
                 fixed_money=30000,
@@ -47,7 +48,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="水道光熱費",
-                icon="icon",
+                icon="infrastructure",
                 collar="#0877D7",
                 sort=4,
                 fixed_money=15000,
@@ -56,7 +57,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="衣服費",
-                icon="icon",
+                icon="clothes",
                 collar="#0877D7",
                 sort=5,
                 fixed_money=30000,
@@ -65,7 +66,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="交際費",
-                icon="icon",
+                icon="alcohol",
                 collar="#0877D7",
                 sort=6,
                 fixed_money=30000,
@@ -74,7 +75,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="交通費",
-                icon="icon",
+                icon="train",
                 collar="#0877D7",
                 sort=7,
                 fixed_money=30000,
@@ -83,7 +84,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="お小遣い",
-                icon="icon",
+                icon="pigBank",
                 collar="#0877D7",
                 sort=8,
                 fixed_money=30000,
@@ -92,7 +93,7 @@ class AccountingRepository:
             AccountingBasic(
                 user_id=user_id,
                 name="雑費",
-                icon="icon",
+                icon="beauty",
                 collar="#0877D7",
                 sort=9,
                 fixed_money=30000,
@@ -104,17 +105,34 @@ class AccountingRepository:
         self.session.commit()
         return basics
 
-    def CategoryGet(self, user_id: str):
+    def CategoryGet(
+        self,
+        user_id: str,
+        id: str | None = None,
+    ):
         stmt = (
             select(AccountingBasic)
-            .where(AccountingBasic.user_id == user_id)
+            .where(
+                AccountingBasic.user_id == user_id, AccountingBasic.deleted_at == None
+            )
             .order_by(AccountingBasic.sort)
         )
+        if id is not None:
+            stmt = stmt.where(AccountingBasic.id == id)
+
         return self.session.execute(stmt).scalars().all()
 
     # カテゴリIDを指定して取得
     async def CategoryOneGet(self, accounting_basic_id: str):
-        stmt = select(AccountingBasic).where(AccountingBasic.id == accounting_basic_id)
+        stmt = select(AccountingBasic).where(
+            AccountingBasic.id == accounting_basic_id,
+            AccountingBasic.deleted_at == None,
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    # レコードの取得(1件)
+    async def RecordOneGet(self, id: str):
+        stmt = select(AccountingRecord).where(AccountingRecord.id == id)
         return self.session.execute(stmt).scalar_one_or_none()
 
     # レコードの取得
@@ -152,24 +170,30 @@ class AccountingRepository:
                 AccountingBasic.collar,
                 AccountingBasic.remaining_balance,
                 func.coalesce(func.sum(AccountingRecord.amount), 0),
+                AccountingBasic.fixed_money,
             )
             .outerjoin(
                 AccountingRecord,
-                AccountingBasic.id == AccountingRecord.accounting_basic_id,
-            )
-            .where(
-                AccountingBasic.user_id == user_id,
-                or_(
-                    AccountingRecord.purchase_date == None,
-                    and_(
-                        AccountingRecord.purchase_date >= start,
-                        AccountingRecord.purchase_date < end,
-                    ),
+                and_(
+                    AccountingBasic.id == AccountingRecord.accounting_basic_id,
+                    AccountingRecord.purchase_date >= start,
+                    AccountingRecord.purchase_date < end,
                 ),
             )
-            .group_by(AccountingBasic.id, AccountingBasic.name)
+            .where(
+                AccountingBasic.user_id == user_id, AccountingBasic.deleted_at == None
+            )
+            .group_by(
+                AccountingBasic.id,
+                AccountingBasic.name,
+                AccountingBasic.icon,
+                AccountingBasic.collar,
+                AccountingBasic.remaining_balance,
+                AccountingBasic.sort,
+            )
             .order_by(AccountingBasic.sort)
         )
+
         # category が指定されていれば追加
         if category is not None:
             stmt = stmt.where(AccountingRecord.accounting_basic_id == category)
@@ -206,3 +230,37 @@ class AccountingRepository:
         self.session.add(record)
         self.session.flush()
         return record
+
+    # レコードの編集
+    async def RecordUpdate(self, id: str, userid: str, data: AccountingRecordUpdate):
+        recode = (
+            self.session.query(AccountingRecord)
+            .filter(AccountingRecord.id == id, AccountingRecord.user_id == userid)
+            .first()
+        )
+
+        if recode is None:
+            raise Exception("Category not found")
+
+        update_data = data.model_dump(exclude_unset=True)
+
+        for key, value in update_data.items():
+            setattr(recode, key, value)
+
+        self.session.flush()
+        return
+
+    # レコードの削除(物理)
+    async def RecordDelete(self, userid: str, id: str):
+        record = (
+            self.session.query(AccountingRecord)
+            .filter(AccountingRecord.id == id, AccountingRecord.user_id == userid)
+            .first()
+        )
+
+        if record is None:
+            raise Exception("Record not found")
+
+        self.session.delete(record)
+        self.session.flush()
+        return

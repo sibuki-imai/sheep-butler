@@ -1,5 +1,5 @@
 import HamburgerButton from "../../shared/hamburgerButton/menu";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Pen from "../../icons/pen.svg?react";
 import WriteBook from "../../icons/writeBook.svg?react";
 
@@ -8,15 +8,18 @@ type Props = {
 };
 
 function AccountingHeader({ type }: Props) {
+  const navigate = useNavigate();
+
   return (
     <div>
       <div className="flex gap-4 items-center">
         <HamburgerButton />
+
         {/* 入力ページ */}
-        <Link
-          to={"/accounting"}
-          className="flex flex-col items-center"
+        <div
+          className="flex flex-col items-center cursor-pointer"
           style={{ marginTop: "15px" }}
+          onClick={() => navigate("/accounting", { replace: true })}
         >
           <Pen
             width={35}
@@ -24,13 +27,13 @@ function AccountingHeader({ type }: Props) {
             style={{ color: type === "input" ? "#ff76D2" : "#1976D2" }}
           />
           <div style={{ fontSize: "10px" }}>入力</div>
-        </Link>
+        </div>
 
         {/* レポートページ */}
-        <Link
-          to={"/accounting/report"}
-          className="flex flex-col items-center"
+        <div
+          className="flex flex-col items-center cursor-pointer"
           style={{ marginTop: "15px" }}
+          onClick={() => navigate("/accounting/report", { replace: true })}
         >
           <WriteBook
             width={35}
@@ -38,7 +41,7 @@ function AccountingHeader({ type }: Props) {
             style={{ color: type === "report" ? "#ff76D2" : "#1976D2" }}
           />
           <div style={{ fontSize: "10px" }}>レポート</div>
-        </Link>
+        </div>
       </div>
 
       {/* 下部線 */}
@@ -52,4 +55,5 @@ function AccountingHeader({ type }: Props) {
     </div>
   );
 }
+
 export default AccountingHeader;

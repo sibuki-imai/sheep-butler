@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/header";
 import axios from "axios";
 import { ResultPopup } from "../../shared/resultPopup/resultPopup";
 import ReportHeader from "../components/reportHeader";
 import ReportCategory from "../components/reportCategory";
-import OneReportCategory from "../components/oneReportCategory";
 
 type Category = {
   id: string;
@@ -13,103 +13,108 @@ type Category = {
   collar: string;
   remaining_balance: number;
   sum_amount: number;
-};
-
-type Record = {
-  id: string;
-  accounting_basic_id: string;
-  amount: number;
-  item_name: string;
-  memo: string;
-  purchase_date: string;
+  fixed_money: number;
 };
 
 // 年月フォーマット関数
+// 例：2026/09
 function formatYM(date: Date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
+
   return `${y}/${m}`;
 }
 
-function InputPage() {
+// 画面表示用 → URL用
+// 2026/09 → 2026-09
+function ymToURL(ym: string) {
+  return ym.replace("/", "-");
+}
+
+// URL用 → 画面表示用
+// 2026-09 → 2026/09
+function urlToYM(date: string) {
+  return date.replace("-", "/");
+}
+
+// 年月 → API用の日付
+// 2026/09 → 2026-09-01
+function ymToISO(ym: string) {
+  const [y, m] = ym.split("/").map(Number);
+
+  return `${y}-${String(m).padStart(2, "0")}-01`;
+}
+
+function ReportPage() {
+  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
+  const navigate = useNavigate();
+
+  // URLのクエリパラメータ
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [popupStatus, setPopupStatus] = useState<number | null>(null);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [record, setRecord] = useState<Record[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectDate, setSelectDate] = useState(formatYM(new Date()));
-  const [sumAmount, setSumAmount] = useState(0);
-  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
-  const [view, setView] = useState(true);
-  function ymToISO(ym: string) {
-    const [y, m] = ym.split("/").map(Number);
-    return `${y}-${String(m).padStart(2, "0")}-01`;
-  }
+  const [totalSumAmount, setTotalSumAmount] = useState(0);
 
-  const fetchCategories = React.useCallback(async () => {
-    try {
-      const date = ymToISO(selectDate);
-      const res = await axios.get(
-        `${BE_ENDPOINT}/accounting/record?date=${date}`,
-        { withCredentials: true },
-      );
+  const urlDate = searchParams.get("date");
 
-      setCategories(res.data);
-
-      setSumAmount(
-        res.data.reduce(
-          (sum: number, item: Category) => sum + item.sum_amount,
-          0,
-        ),
-      );
-    } catch (e) {
-      if (axios.isAxiosError(e) && e.response?.status === 401) {
-        setPopupStatus(401);
-        setPopupMessage("再ログインが必要です");
-        return;
-      }
-      setPopupStatus(500);
-      setPopupMessage("エラーが発生しました");
-    }
-  }, [selectDate, BE_ENDPOINT]);
-
-  const oneCategory = async (id: string) => {
-    try {
-      const date = ymToISO(selectDate);
-      const res = await axios.get(
-        `${BE_ENDPOINT}/accounting/record?date=${date}&category=${id}&detail=true`,
-        { withCredentials: true },
-      );
-
-      setRecord(res.data);
-      setSumAmount(
-        res.data.reduce((sum: number, item: Record) => sum + item.amount, 0),
-      );
-    } catch (e) {
-      if (axios.isAxiosError(e) && e.response?.status === 401) {
-        setPopupStatus(401);
-        setPopupMessage("再ログインが必要です");
-        return;
-      }
-
-      // その他のエラー
-      setPopupStatus(500);
-      setPopupMessage("エラーが発生しました");
-    }
-  };
-
-  const handleSelectCategory = (id: string) => {
-    setSelectedCategory(id);
-    oneCategory(id);
-    setView(false); //画面切り替え
-  };
+  const selectDate = urlDate ? urlToYM(urlDate) : formatYM(new Date());
 
   useEffect(() => {
-    const run = async () => {
-      await fetchCategories();
+    if (!searchParams.get("date")) {
+      const currentDate = formatYM(new Date());
+
+      setSearchParams({
+        date: ymToURL(currentDate),
+      });
+    }
+  }, [searchParams, setSearchParams]);
+
+  /*
+   * カテゴリ情報取得
+   */
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const date = ymToISO(selectDate);
+
+        const res = await axios.get(
+          `${BE_ENDPOINT}/accounting/record?date=${date}`,
+          {
+            withCredentials: true,
+          },
+        );
+
+        setCategories(res.data);
+
+        setTotalSumAmount(
+          res.data.reduce(
+            (sum: number, item: Category) => sum + item.sum_amount,
+            0,
+          ),
+        );
+      } catch (e) {
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          setPopupStatus(401);
+          setPopupMessage("再ログインが必要です");
+          return;
+        }
+
+        setPopupStatus(500);
+        setPopupMessage("エラーが発生しました");
+      }
     };
-    run();
-  }, [fetchCategories]);
+
+    fetchCategories();
+  }, [selectDate, BE_ENDPOINT]);
+
+  /*
+   * カテゴリ選択
+   */
+  const handleSelectCategory = (id: string) => {
+    navigate(`/accounting/report/category/${id}`);
+  };
 
   return (
     <div style={{ width: "100%", paddingBottom: "200px" }}>
@@ -120,32 +125,27 @@ function InputPage() {
           onClose={() => setPopupStatus(null)}
         />
       )}
+
       <Header type="report" />
-      <ReportHeader
-        sum={sumAmount}
-        selectDate={selectDate}
-        onChangeDate={setSelectDate}
-      />
-      {view ? (
+
+      <div>
+        <ReportHeader
+          sum={totalSumAmount}
+          selectDate={selectDate}
+          onChangeDate={(date) => {
+            setSearchParams({
+              date: ymToURL(date),
+            });
+          }}
+        />
+
         <ReportCategory
           categories={categories}
           onSelectCategory={handleSelectCategory}
         />
-      ) : (
-        <OneReportCategory
-          categorieInfo={
-            categories.find((cat) => cat.id === selectedCategory) ?? null
-          }
-          recordDate={record}
-          onSelectCategory={setSelectedCategory}
-          onBack={() => {
-            setView(true);
-            fetchCategories();
-          }}
-        />
-      )}
+      </div>
     </div>
   );
 }
 
-export default InputPage;
+export default ReportPage;

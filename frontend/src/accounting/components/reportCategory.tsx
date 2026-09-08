@@ -11,6 +11,7 @@ type Category = {
   collar: string;
   remaining_balance: number;
   sum_amount: number;
+  fixed_money: number;
 };
 
 type Props = {
@@ -92,8 +93,13 @@ function ReportCategory({ categories, onSelectCategory }: Props) {
                     rowGap: "4px",
                   }}
                 >
-                  <div style={{ textAlign: "right" }}> 残 高 :</div>
-                  <div>{Number(item.remaining_balance).toLocaleString()}円</div>
+                  <div style={{ textAlign: "right" }}>予算残高:</div>
+                  <div>
+                    {Number(
+                      item.fixed_money - item.sum_amount,
+                    ).toLocaleString()}
+                    円
+                  </div>
 
                   <div style={{ textAlign: "right" }}>使用金額:</div>
                   <div>{Number(item.sum_amount).toLocaleString()}円</div>
