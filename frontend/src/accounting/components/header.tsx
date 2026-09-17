@@ -2,9 +2,11 @@ import HamburgerButton from "../../shared/hamburgerButton/menu";
 import { useNavigate } from "react-router-dom";
 import Pen from "../../icons/pen.svg?react";
 import WriteBook from "../../icons/writeBook.svg?react";
+import Tag from "../../icons/categoryIcons/tag.svg?react";
+import Camera from "../../icons/camera.svg?react";
 
 type Props = {
-  type: "input" | "report";
+  type: "input" | "report" | "category" | "bulk";
 };
 
 function AccountingHeader({ type }: Props) {
@@ -41,6 +43,34 @@ function AccountingHeader({ type }: Props) {
             style={{ color: type === "report" ? "#ff76D2" : "#1976D2" }}
           />
           <div style={{ fontSize: "10px" }}>レポート</div>
+        </div>
+
+        {/* カテゴリページ */}
+        <div
+          className="flex flex-col items-center cursor-pointer"
+          style={{ marginTop: "15px" }}
+          onClick={() => navigate("/accounting/category", { replace: true })}
+        >
+          <Tag
+            width={35}
+            height={35}
+            style={{ color: type === "category" ? "#ff76D2" : "#1976D2" }}
+          />
+          <div style={{ fontSize: "10px" }}>カテゴリー</div>
+        </div>
+
+        {/* 一括入力 */}
+        <div
+          className="flex flex-col items-center cursor-pointer"
+          style={{ marginTop: "15px" }}
+          onClick={() => navigate("/accounting/bulk", { replace: true })}
+        >
+          <Camera
+            width={35}
+            height={35}
+            style={{ color: type === "bulk" ? "#ff76D2" : "#1976D2" }}
+          />
+          <div style={{ fontSize: "10px" }}>一括入力</div>
         </div>
       </div>
 

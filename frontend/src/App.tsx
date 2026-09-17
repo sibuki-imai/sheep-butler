@@ -5,6 +5,8 @@ import Login from "./auth/pages/login";
 import Accounting from "./accounting/pages/InputPage";
 import ReportPage from "./accounting/pages/ReportPage";
 import ReportOneCategory from "./accounting/pages/ReportOneCategory";
+import CategoryPage from "./accounting/pages/CategoryPage";
+import BulkInputPage from "./accounting/pages/BulkInputPage";
 import TestPage from "./Test";
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
           path="/accounting/report/category/:categoryId"
           element={<ReportOneCategory />}
         />
+        <Route path="/accounting/category" element={<CategoryPage />} />
+        <Route path="/accounting/bulk" element={<BulkInputPage />} />
         <Route path="/test" element={<TestPage />} />
       </Routes>
     </BrowserRouter>

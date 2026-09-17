@@ -5,8 +5,9 @@ from src.utils.firebase import Firebase
 from src.schema.accounting_schema import (
     AccountingRecordPost,
     AccountingRecordPatch,
-    AccountingRecordDelete,
+    AccountingBasicPatch,
     RecordQuery,
+    AccountingRecordBulkPost,
 )
 from src.accounting.accounting_controller import AccountingController
 
@@ -31,8 +32,29 @@ def categoryGet(
 
 
 # 編集
+@router.patch("/")
+async def categoryPatch(
+    request: Request, body: AccountingBasicPatch, db: Session = Depends(get_db)
+):
+    firebase = Firebase()
+    controller = AccountingController(db)
+    session_cookie = request.cookies.get("session")
+    uid = firebase.session_check(session_cookie)
+    return await controller.CategoryPatch(uid, body)
+
 
 # 削除(論理)
+@router.delete("/{id}")
+async def categoryDelete(
+    id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    firebase = Firebase()
+    controller = AccountingController(db)
+    session_cookie = request.cookies.get("session")
+    uid = firebase.session_check(session_cookie)
+    return await controller.CategoryDelete(uid, id)
 
 
 # レコード
@@ -65,6 +87,18 @@ async def recordPost(
     session_cookie = request.cookies.get("session")
     uid = firebase.session_check(session_cookie)
     return await controller.RecordPost(uid, body)
+
+
+# 作成(一括)
+@router.post("/record/bulk")
+async def recordBulkPost(
+    request: Request, body: AccountingRecordBulkPost, db: Session = Depends(get_db)
+):
+    firebase = Firebase()
+    controller = AccountingController(db)
+    session_cookie = request.cookies.get("session")
+    uid = firebase.session_check(session_cookie)
+    return await controller.recordBulkPost(uid, body)
 
 
 # 編集

@@ -286,6 +286,7 @@ function Calendar({
         userSelect: "none",
         width: `${calendarWidth}px`,
         height: "200px",
+        marginTop: "3px",
       }}
     >
       {/* 月移動 */}
@@ -423,8 +424,6 @@ function Drawing({
         width: "100%",
         display: "flex",
         flexDirection: "column",
-
-        // alignItems: "center",
       }}
     >
       <DayDisplay

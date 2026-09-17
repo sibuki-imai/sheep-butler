@@ -3,6 +3,7 @@ from sqlalchemy import select
 from datetime import date
 from sqlalchemy import and_, or_
 from sqlalchemy import func
+from datetime import datetime, timezone
 from src.model.accounting_basic import AccountingBasic
 from src.model.accounting_record import AccountingRecord
 from src.schema.accounting_schema import AccountingBasicUpdate
@@ -216,6 +217,21 @@ class AccountingRepository:
         self.session.flush()
         return
 
+    # カテゴリの削除(論理)
+    async def CategoryDelete(self, userid: str, id: str):
+        record = (
+            self.session.query(AccountingBasic)
+            .filter(AccountingBasic.id == id, AccountingBasic.user_id == userid)
+            .first()
+        )
+
+        if record is None:
+            raise Exception("Record not found")
+
+        record.deleted_at = datetime.now(timezone.utc)
+        self.session.flush()
+        return
+
     # レコードの作成
     async def RecordPost(self, new_data: AccountingRecord):
         record = AccountingRecord(
@@ -230,6 +246,12 @@ class AccountingRepository:
         self.session.add(record)
         self.session.flush()
         return record
+
+    # レコードの一括作成
+    async def recordBulkPost(self, new_data: list[AccountingRecord]):
+        self.session.add_all(new_data)
+        self.session.flush()
+        return new_data
 
     # レコードの編集
     async def RecordUpdate(self, id: str, userid: str, data: AccountingRecordUpdate):

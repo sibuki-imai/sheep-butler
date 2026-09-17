@@ -152,7 +152,7 @@ function ReportOneCategory() {
     };
 
     loadData();
-  });
+  }, [categoryId, selectDate]);
 
   /*
    * レコード保存
@@ -164,7 +164,19 @@ function ReportOneCategory() {
       });
 
       // 保存後も最新データを取得
-      await fetchCategory();
+      const data = await fetchCategory();
+
+      if (data) {
+        setCategorie(data.category);
+        setRecord(data.records);
+
+        setDetailSumAmount(
+          data.records.reduce(
+            (sum: number, item: Record) => sum + item.amount,
+            0,
+          ),
+        );
+      }
 
       setPopupStatus(200);
       setPopupMessage("登録が完了しました");
@@ -184,7 +196,19 @@ function ReportOneCategory() {
       await axios.delete(`${BE_ENDPOINT}/accounting/record/${id}`, {
         withCredentials: true,
       });
-      await fetchCategory();
+      const data = await fetchCategory();
+
+      if (data) {
+        setCategorie(data.category);
+        setRecord(data.records);
+
+        setDetailSumAmount(
+          data.records.reduce(
+            (sum: number, item: Record) => sum + item.amount,
+            0,
+          ),
+        );
+      }
 
       setPopupStatus(200);
       setPopupMessage("登録が完了しました");

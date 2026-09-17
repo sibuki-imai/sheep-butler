@@ -30,7 +30,7 @@ export const ResultPopup: React.FC<Props> = ({ status, message, onClose }) => {
         `}
       >
         <h2 className="text-base font-bold mb-1">
-          {isSuccess ? "成功しました" : "エラーが発生しました"}
+          {isSuccess ? "完了しました" : "エラーが発生しました"}
         </h2>
 
         {!isSuccess && (

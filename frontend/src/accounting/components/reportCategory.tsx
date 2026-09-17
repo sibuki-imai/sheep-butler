@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { IconMap } from "./iconIndex";
 
 // デフォルト
@@ -22,7 +22,6 @@ type Props = {
 const isMobile = window.innerWidth < 768;
 
 function ReportCategory({ categories, onSelectCategory }: Props) {
-  const [selected, setSelected] = useState<string | null>(null);
   const view = isMobile ? 1 : 3;
   const height = isMobile ? "350px" : "280px";
 
@@ -61,7 +60,6 @@ function ReportCategory({ categories, onSelectCategory }: Props) {
                   transition: "all 0.2s ease",
                 }}
                 onClick={() => {
-                  setSelected(item.id);
                   onSelectCategory(item.id);
                 }}
               >
