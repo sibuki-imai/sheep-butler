@@ -5,7 +5,8 @@ from fastapi.responses import JSONResponse
 from fastapi import Request
 import logging
 from src.auth.auth_router import router as AuthRouter
-from src.accounting.accounting_router import router as accountingRouter
+from src.accounting.accounting_router import router as AccountingRouter
+from src.batch.batch_router import router as BatchRouter
 
 app = FastAPI()
 
@@ -19,7 +20,8 @@ app.add_middleware(
 logger = logging.getLogger("uvicorn.error")
 
 app.include_router(AuthRouter, prefix="/auth")
-app.include_router(accountingRouter, prefix="/accounting")
+app.include_router(AccountingRouter, prefix="/accounting")
+app.include_router(BatchRouter, prefix="/batch")
 
 
 @app.get("/")

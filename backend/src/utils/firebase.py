@@ -36,8 +36,8 @@ class Firebase:
             )
 
         try:
-            decoded = auth.verify_session_cookie(session_cookie, check_revoked=True)
-            return decoded["uid"]
+            decorded = auth.verify_session_cookie(session_cookie, check_revoked=True)
+            return decorded["uid"]
         except Exception:
             raise HTTPException(
                 status_code=401,
