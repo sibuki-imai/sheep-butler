@@ -41,3 +41,9 @@ class AccountingController:
 
     async def RecordDelete(self, user_id: str, id: str):
         return await self.service.RecordDelete(user_id, id)
+
+    async def PhotoOcr(self, image_data: bytes):
+        # OCR
+        lines = await self.service.PhotoOcr(image_data)
+
+        return await self.service.PhotoArrange(lines)

@@ -41,7 +41,6 @@ type Props = {
   onDelete: (id: string) => void;
 };
 const isMobile = window.innerWidth < 768;
-const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
 
 function CategoryModal({
   onSelect,
@@ -52,7 +51,7 @@ function CategoryModal({
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await axios.get(`${BE_ENDPOINT}/accounting/record`, {
+      const res = await axios.get(`/api/accounting/record/`, {
         withCredentials: true,
       });
       setCategories(res.data);

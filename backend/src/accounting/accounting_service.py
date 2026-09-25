@@ -14,7 +14,15 @@ from src.model.accounting_basic import AccountingBasic
 from datetime import datetime, date
 from src.schema.accounting_schema import AccountingBasicUpdate
 from src.schema.accounting_schema import AccountingRecordUpdate
+from fastapi import APIRouter, UploadFile, File
 from dateutil.relativedelta import relativedelta
+import re
+
+import cv2
+import numpy as np
+import pytesseract
+
+from pytesseract import Output
 
 
 class AccountingService:
@@ -313,4 +321,144 @@ class AccountingService:
         except Exception as e:
             #  rollback（失敗時）
             print("ロールバック")
+            raise e
+
+    # OCR
+    async def PhotoOcr(self, image_data: bytes):
+        try:
+            # bytes → OpenCV画像
+            image = cv2.imdecode(
+                np.frombuffer(image_data, np.uint8),
+                cv2.IMREAD_COLOR,
+            )
+
+            if image is None:
+                raise ValueError("画像を読み込めませんでした")
+
+            print("image size:", image.shape)
+
+            # グレースケール化
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            # 二値化
+            _, binary = cv2.threshold(
+                gray,
+                0,
+                255,
+                cv2.THRESH_BINARY + cv2.THRESH_OTSU,
+            )
+
+            # OCR
+            data = pytesseract.image_to_data(
+                binary,
+                lang="jpn",
+                config="--psm 6",
+                output_type=Output.DICT,
+            )
+
+            ocr_results = []
+
+            for i, text in enumerate(data["text"]):
+                text = text.strip()
+
+                if not text:
+                    continue
+
+                try:
+                    confidence = float(data["conf"][i])
+                except (ValueError, TypeError):
+                    continue
+
+                if confidence < 30:
+                    continue
+
+                ocr_results.append(
+                    {
+                        "text": text,
+                        "x": int(data["left"][i]),
+                        "y": int(data["top"][i]),
+                        "width": int(data["width"][i]),
+                        "height": int(data["height"][i]),
+                        "confidence": confidence,
+                    }
+                )
+
+            # リスト化処理
+            lines = []
+
+            for item in sorted(ocr_results, key=lambda x: x["y"]):
+                item_center_y = item["y"] + item["height"] / 2
+
+                found_line = None
+
+                for line in lines:
+                    line_center_y = line["center_y"]
+
+                    if abs(item_center_y - line_center_y) < 20:
+                        found_line = line
+                        break
+
+                if found_line:
+                    found_line["items"].append(item)
+
+                    # 行の中心Yを更新
+                    centers = [x["y"] + x["height"] / 2 for x in found_line["items"]]
+                    found_line["center_y"] = sum(centers) / len(centers)
+
+                else:
+                    lines.append(
+                        {
+                            "center_y": item_center_y,
+                            "items": [item],
+                        }
+                    )
+
+            # 左 → 右に並べる
+            for line in lines:
+                line["items"].sort(key=lambda x: x["x"])
+
+                # OCR結果を左から右へ結合
+                line["text"] = "".join(item["text"] for item in line["items"])
+
+            return lines
+
+        except Exception as e:
+            raise e
+
+    # フォーマット整形
+    async def PhotoArrange(self, list: list):
+        try:
+            arrangeList = []
+
+            for line in list:
+                text = line["text"].strip()
+
+                # 値引き項目の削除
+                if "-" in text:
+                    continue
+
+                # 行末の数字を探す
+                match = re.search(r"(\d{1,5})\s*[※A]*$", text)
+
+                if not match:
+                    continue
+
+                amount = int(match.group(1))
+
+                # 金額より前を商品名にする
+                name = text[: match.start()].strip()
+
+                if not name:
+                    continue
+
+                arrangeList.append(
+                    {
+                        "name": name,
+                        "amount": amount,
+                    }
+                )
+
+            return arrangeList
+
+        except Exception as e:
             raise e

@@ -9,8 +9,6 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
-
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +29,7 @@ function Login() {
 
   const login = async (idToken: string) => {
     const result = await axios.post(
-      `${BE_ENDPOINT}/auth`,
+      `/api/auth/`,
       {
         id_token: idToken,
       },
@@ -43,7 +41,13 @@ function Login() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: "0 auto" }}>
+    <div
+      style={{
+        margin: "0 auto",
+        width: "70%",
+        marginLeft: "15%",
+      }}
+    >
       <h2>ログイン</h2>
 
       {/* Google ログイン */}
