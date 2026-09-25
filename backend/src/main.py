@@ -12,16 +12,19 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://ascitic-lacy-nonironically.ngrok-free.dev",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 logger = logging.getLogger("uvicorn.error")
 
-app.include_router(AuthRouter, prefix="/auth")
-app.include_router(AccountingRouter, prefix="/accounting")
-app.include_router(BatchRouter, prefix="/batch")
+app.include_router(AuthRouter, prefix="/api/auth")
+app.include_router(AccountingRouter, prefix="/api/accounting")
+app.include_router(BatchRouter, prefix="/api/batch")
 
 
 @app.get("/")

@@ -46,7 +46,6 @@ function ymToISO(ym: string) {
 }
 
 function ReportPage() {
-  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
   const navigate = useNavigate();
 
   // URLのクエリパラメータ
@@ -78,13 +77,9 @@ function ReportPage() {
     const fetchCategories = async () => {
       try {
         const date = ymToISO(selectDate);
-
-        const res = await axios.get(
-          `${BE_ENDPOINT}/accounting/record?date=${date}`,
-          {
-            withCredentials: true,
-          },
-        );
+        const res = await axios.get(`/api/accounting/record?date=${date}`, {
+          withCredentials: true,
+        });
 
         setCategories(res.data);
 
@@ -107,13 +102,14 @@ function ReportPage() {
     };
 
     fetchCategories();
-  }, [selectDate, BE_ENDPOINT]);
+  }, [selectDate]);
 
   /*
    * カテゴリ選択
    */
   const handleSelectCategory = (id: string) => {
-    navigate(`/accounting/report/category/${id}`);
+    const formattedMonth = selectDate.replace("/", "-");
+    navigate(`/accounting/report/category/${id}?date=${formattedMonth}`);
   };
 
   return (
