@@ -6,6 +6,8 @@ import CategoryBox from "../components/categoryBox";
 import BulkInputBlock from "../components/bulkInputBlock";
 import FormatDate from "../components/formatDate";
 import axios from "axios";
+import Camera from "../../icons/camera.svg?react";
+import CameraModal from "../components/cameraModal";
 import { ResultPopup } from "../../shared/resultPopup/resultPopup";
 
 type Data = {
@@ -17,21 +19,25 @@ type Data = {
 function BulkInputPage() {
   const [popupStatus, setPopupStatus] = useState<number | null>(null);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
-
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   // SEND
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [data, setData] = useState<Data[]>([]);
+  const dataSum = data.reduce(
+    (total, item) => total + Number(item.amount ?? 0),
+    0,
+  );
 
   const [categories, setCategories] = useState([]);
 
-  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
   const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${BE_ENDPOINT}/accounting`, {
+        const res = await axios.get(`/api/accounting/`, {
           withCredentials: true,
         });
         setCategories(res.data);
@@ -51,8 +57,102 @@ function BulkInputPage() {
     fetchCategories();
   }, []);
 
+  const cameraBoot = async () => {
+    try {
+      setIsCameraOpen(true);
+    } catch (error) {
+      console.error(error);
+      setPopupStatus(500);
+      setPopupMessage("カメラが起動できませんでした");
+    }
+  };
+
+  const takePhoto = (image: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      // image が data URL の場合
+      if (image.startsWith("data:")) {
+        const [header, base64] = image.split(",");
+        if (!base64) {
+          resolve(null);
+          return;
+        }
+        const mimeMatch = header.match(/data:(.*?);base64/);
+        const mimeType = mimeMatch?.[1] ?? "image/jpeg";
+        const byteCharacters = atob(base64);
+        const byteArrays = [];
+        for (let i = 0; i < byteCharacters.length; i += 512) {
+          const slice = byteCharacters.slice(i, i + 512);
+          const byteNumbers = new Array(slice.length);
+          for (let j = 0; j < slice.length; j++) {
+            byteNumbers[j] = slice.charCodeAt(j);
+          }
+          byteArrays.push(new Uint8Array(byteNumbers));
+        }
+        const blob = new Blob(byteArrays, { type: mimeType });
+        resolve(blob);
+        return;
+      }
+
+      // 通常の画像URLの場合
+      fetch(image)
+        .then((response) => response.blob())
+        .then((blob) => resolve(blob))
+        .catch(() => resolve(null));
+    });
+  };
+
+  const sendPhoto = async (image: string) => {
+    try {
+      const photo = await takePhoto(image);
+      if (!photo) {
+        setPopupStatus(400);
+        setPopupMessage("写真の取得に失敗しました");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("photo", photo, "photo.jpg");
+      const response = await axios.post<{ name: string; amount: number }[]>(
+        `/api/accounting/record/photo`,
+        formData,
+        {
+          withCredentials: true,
+        },
+      );
+
+      const photoList = response.data;
+
+      if (photoList.length > 0) {
+        const newList: Data[] = [];
+
+        for (const item of photoList) {
+          newList.push({
+            item_name: item.name,
+            amount: item.amount,
+            memo: null,
+          });
+        }
+        setPopupMessage("データ読み込みが完了しました。");
+        setPopupStatus(200);
+
+        setData(newList);
+      }
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 401) {
+        setPopupStatus(401);
+        setPopupMessage("再ログインが必要です");
+        return;
+      }
+      if (e instanceof Error) {
+        setPopupStatus(400);
+        setPopupMessage(e.message);
+        return;
+      }
+      setPopupStatus(500);
+      setPopupMessage("不明なエラーです");
+    }
+  };
+
   const sendPush = async () => {
-    console.log("data", data);
     try {
       if (!(data.length > 0)) {
         throw new Error("値が入力されていません");
@@ -67,7 +167,7 @@ function BulkInputPage() {
       });
 
       await axios.post(
-        `${BE_ENDPOINT}/accounting/record/bulk`,
+        `/api/accounting/record/bulk`,
         {
           accounting_basic_id: selectedCategory,
           purchase_date: FormatDate(selectedDate ?? new Date()),
@@ -125,6 +225,16 @@ function BulkInputPage() {
           onClose={() => setPopupStatus(null)}
         />
       )}
+      {isCameraOpen == true && (
+        <div>
+          <CameraModal
+            onClose={() => setIsCameraOpen(false)}
+            onCapture={(image) => {
+              sendPhoto(image);
+            }}
+          />
+        </div>
+      )}
       <Header type="bulk" />
       <div
         style={{
@@ -135,6 +245,30 @@ function BulkInputPage() {
         }}
       >
         {/* ============================
+            画像入力
+            ============================ */}
+        <div
+          style={{
+            marginTop: "10px",
+            marginLeft: isMobile ? "auto" : "5%",
+            marginRight: isMobile ? "5%" : undefined,
+            gap: "5px",
+            display: "flex",
+            alignItems: "center",
+            padding: "0.3em 0.3em",
+            border: "solid 3px #83A5C4",
+            borderRadius: "20px",
+            color: "#5f7f9d",
+            userSelect: "none",
+          }}
+          onClick={() => {
+            cameraBoot();
+          }}
+        >
+          <Camera width={35} height={35} style={{ color: "#83A5C4" }} />
+          画像入力
+        </div>
+        {/* ============================
             カレンダー
             ============================ */}
         <div
@@ -143,7 +277,7 @@ function BulkInputPage() {
             display: "flex",
             justifyContent: "center",
             marginTop: "15px",
-            marginLeft: isMobile ? "13%" : "20%",
+            marginLeft: isMobile ? "13%" : "5%",
           }}
         >
           <Drawing
@@ -166,6 +300,10 @@ function BulkInputPage() {
         </div>
       </div>
       <BulkInputBlock data={data} onChange={setData} />
+      {/* 合計値と税割り振り */}
+      <div>
+        <div>合計：{dataSum.toLocaleString()}円</div>
+      </div>
 
       {/* ============================
           送信ボタン

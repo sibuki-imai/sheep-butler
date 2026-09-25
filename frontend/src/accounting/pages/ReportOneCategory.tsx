@@ -69,8 +69,6 @@ function ReportOneCategory() {
   const [record, setRecord] = useState<Record[]>([]);
   const [detailSumAmount, setDetailSumAmount] = useState(0);
 
-  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
-
   const fetchCategory = async () => {
     if (!categoryId) return;
 
@@ -78,11 +76,11 @@ function ReportOneCategory() {
       const date = ymToISO(selectDate);
 
       const [resCategorie, resRecord] = await Promise.all([
-        axios.get(`${BE_ENDPOINT}/accounting?id=${categoryId}&date=${date}`, {
+        axios.get(`/api/accounting/?id=${categoryId}&date=${date}`, {
           withCredentials: true,
         }),
         axios.get(
-          `${BE_ENDPOINT}/accounting/record?date=${date}&category=${categoryId}&detail=true`,
+          `/api/accounting/record?date=${date}&category=${categoryId}&detail=true`,
           {
             withCredentials: true,
           },
@@ -159,7 +157,7 @@ function ReportOneCategory() {
    */
   const handleSaveRecord = async (updated: Record) => {
     try {
-      await axios.patch(`${BE_ENDPOINT}/accounting/record`, updated, {
+      await axios.patch(`/api/accounting/record/`, updated, {
         withCredentials: true,
       });
 
@@ -193,7 +191,7 @@ function ReportOneCategory() {
    */
   const handleDeleteRecord = async (id: string) => {
     try {
-      await axios.delete(`${BE_ENDPOINT}/accounting/record/${id}`, {
+      await axios.delete(`/api/accounting/record/${id}/`, {
         withCredentials: true,
       });
       const data = await fetchCategory();

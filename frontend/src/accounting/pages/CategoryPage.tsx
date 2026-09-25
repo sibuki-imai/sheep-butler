@@ -21,13 +21,12 @@ function CategoryPage() {
   const [popupStatus, setPopupStatus] = useState<number | null>(null);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [isOpen, setOpen] = useState<boolean>(false);
-  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
   const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${BE_ENDPOINT}/accounting`, {
+        const res = await axios.get(`/api/accounting/`, {
           withCredentials: true,
         });
         setCategories(res.data);
@@ -48,7 +47,7 @@ function CategoryPage() {
   // データ編集
   const handleSaveRecord = async (updated: Category) => {
     try {
-      await axios.patch(`${BE_ENDPOINT}/accounting/`, updated, {
+      await axios.patch(`/api/accounting/`, updated, {
         withCredentials: true,
       });
       setPopupStatus(200);
@@ -69,7 +68,7 @@ function CategoryPage() {
   // データ削除
   const handleDeleteRecord = async (id: string) => {
     try {
-      await axios.delete(`${BE_ENDPOINT}/accounting/${id}`, {
+      await axios.delete(`/api/accounting/${id}/`, {
         withCredentials: true,
       });
       setPopupStatus(200);

@@ -18,13 +18,12 @@ function InputPage() {
   const [categories, setCategories] = useState([]);
   const [popupStatus, setPopupStatus] = useState<number | null>(null);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
-  const BE_ENDPOINT = import.meta.env.VITE_BEAPI;
   const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${BE_ENDPOINT}/accounting`, {
+        const res = await axios.get(`/api/accounting/`, {
           withCredentials: true,
         });
         setCategories(res.data);
@@ -57,7 +56,7 @@ function InputPage() {
       }
 
       await axios.post(
-        `${BE_ENDPOINT}/accounting/record`,
+        `/api/accounting/record/`,
         {
           accounting_basic_id: selectedCategory,
           amount: Number(money),

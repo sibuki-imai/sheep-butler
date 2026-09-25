@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import Hamburger from "../../icons/hamburger.svg?react";
 import Culose from "../../icons/close.svg?react";
+import Login from "../../icons/login.svg?react";
 import MenusList from "./menuList";
+import { useNavigate } from "react-router-dom";
 
 function HamburgerButton() {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
+
+  const navigate = useNavigate();
 
   return (
     <>
@@ -33,18 +37,35 @@ function HamburgerButton() {
           zIndex: 1000,
         }}
       >
-        {/* 閉じるボタン */}
-        <button
-          onClick={closeMenu}
-          style={{
-            marginTop: "10px",
-            padding: "10px 20px",
-            fontSize: "18px",
-          }}
-        >
-          <Culose width={85} height={85} style={{ color: "#83A5C4" }} />
-        </button>
-
+        <div style={{ display: "flex" }}>
+          {/* 閉じるボタン */}
+          <button
+            onClick={closeMenu}
+            style={{
+              marginTop: "10px",
+              padding: "10px 20px",
+              fontSize: "18px",
+            }}
+          >
+            <Culose width={85} height={85} style={{ color: "#83A5C4" }} />
+          </button>
+          <div
+            style={{
+              marginLeft: "auto",
+              marginTop: "60px",
+              padding: "10px 50px",
+              fontSize: "18px",
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              gap: "10px",
+            }}
+            onClick={() => navigate("/login")}
+          >
+            <Login width={40} height={40} style={{ color: "#698095" }} />
+            Login
+          </div>
+        </div>
         <MenusList />
       </div>
 

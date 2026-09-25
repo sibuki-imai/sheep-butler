@@ -6,3 +6,8 @@ alembic
 requests
 firebase-admin
 python-dateutil
+python-multipart
+pytesseract
+Pillow
+opencv-python-headless
+numpy

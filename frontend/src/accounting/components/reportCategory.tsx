@@ -23,14 +23,11 @@ const isMobile = window.innerWidth < 768;
 
 function ReportCategory({ categories, onSelectCategory }: Props) {
   const view = isMobile ? 1 : 3;
-  const height = isMobile ? "350px" : "280px";
 
   return (
     <div>
       <div
         style={{
-          height: height,
-          overflowY: "auto",
           padding: "10px",
         }}
       >

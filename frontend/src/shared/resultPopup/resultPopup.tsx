@@ -9,7 +9,6 @@ type Props = {
 export const ResultPopup: React.FC<Props> = ({ status, message, onClose }) => {
   const isSuccess = status === 200;
 
-  // ★ 表示されたら 2 秒後に自動で閉じる
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
@@ -33,11 +32,9 @@ export const ResultPopup: React.FC<Props> = ({ status, message, onClose }) => {
           {isSuccess ? "完了しました" : "エラーが発生しました"}
         </h2>
 
-        {!isSuccess && (
-          <p className="text-sm text-gray-700 mb-1 text-center">
-            {message ?? "不明なエラーです"}
-          </p>
-        )}
+        <p className="text-sm text-gray-700 mb-1 text-center">
+          {message ?? (isSuccess ? "処理が完了しました。" : "不明なエラーです")}
+        </p>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, Depends
+import json
 from src.database import get_db
 from sqlalchemy.orm import Session
 from src.utils.firebase import Firebase
@@ -9,6 +10,7 @@ from src.schema.accounting_schema import (
     RecordQuery,
     AccountingRecordBulkPost,
 )
+from fastapi import APIRouter, UploadFile, File
 from src.accounting.accounting_controller import AccountingController
 
 router = APIRouter()
@@ -125,3 +127,34 @@ async def recordDelete(
     session_cookie = request.cookies.get("session")
     uid = firebase.session_check(session_cookie)
     return await controller.RecordDelete(uid, id)
+
+
+# 画像読み取り
+@router.post("/record/photo")
+async def photo(
+    request: Request,
+    photo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    firebase = Firebase()
+    controller = AccountingController(db)
+    session_cookie = request.cookies.get("session")
+    uid = firebase.session_check(session_cookie)
+    image_data = await photo.read()
+    print("========== PHOTO ==========")
+    print("filename:", photo.filename)
+    print("content_type:", photo.content_type)
+    print("size:", len(image_data), "bytes")
+    print("============================")
+
+    arrangeList = await controller.PhotoOcr(image_data)
+
+    print("========== OCR JSON ==========")
+    # 詳細ver
+    # print(json.dumps(ocr_results, ensure_ascii=False, indent=2))
+    # ざっくりver
+    for item in arrangeList:
+        print(item)
+
+    return arrangeList
+    # "items": arrangeList,
