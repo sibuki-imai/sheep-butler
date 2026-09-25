@@ -32,26 +32,33 @@ type DragInfo = {
 };
 
 function CameraModal({ onClose, onCapture }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // カメラのstream
+  /*
+   * カメラの MediaStream
+   *
+   * useRef の型を明示する。
+   */
   const streamRef = useRef<MediaStream | null>(null);
 
-  // ドラッグ情報
+  /*
+   * ドラッグ情報
+   */
   const dragRef = useRef<DragInfo | null>(null);
 
+  /*
+   * コンポーネントがアンマウント済みか
+   */
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCropMode, setIsCropMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // ドラッグ中かどうか
   const [isDragging, setIsDragging] = useState(false);
 
   /*
    * 初期の有効範囲
    *
-   * カメラ側の補助線と同じ割合
+   * カメラ画面の補助線と同じ割合
    *
    * top    : 10%
    * bottom : 10%
@@ -66,13 +73,18 @@ function CameraModal({ onClose, onCapture }: Props) {
   });
 
   /*
+   * ========================================
    * カメラ停止
+   * ========================================
+   *
+   * ここで必ず全ての track を stop する。
+   *
    */
   const stopCamera = () => {
-    const stream = streamRef.current;
+    const stream: MediaStream | null = streamRef.current;
 
     if (stream) {
-      stream.getTracks().forEach((track) => {
+      stream.getTracks().forEach((track: MediaStreamTrack) => {
         track.stop();
       });
 
@@ -86,7 +98,53 @@ function CameraModal({ onClose, onCapture }: Props) {
   };
 
   /*
+   * ========================================
    * カメラ起動
+   * ========================================
+   *
+   * getUserMedia() はこの関数だけで呼ぶ。
+   *
+   * これによってカメラが二重起動することを防ぐ。
+   */
+  const startCamera = async () => {
+    try {
+      // すでにカメラがあれば停止
+      stopCamera();
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: "environment",
+          },
+          width: {
+            ideal: 1920,
+          },
+          height: {
+            ideal: 1080,
+          },
+        },
+        audio: false,
+      });
+
+      streamRef.current = mediaStream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
+      }
+    } catch (error) {
+      console.error("カメラ起動エラー:", error);
+
+      setError("カメラを起動できませんでした。");
+    }
+  };
+
+  /*
+   * ========================================
+   * 初回カメラ起動
+   * ========================================
+   *
+   * getUserMedia() はここから一度だけ呼ぶ。
    */
   useEffect(() => {
     let active = true;
@@ -108,8 +166,9 @@ function CameraModal({ onClose, onCapture }: Props) {
           audio: false,
         });
 
+        // effect終了後に取得できた場合
         if (!active) {
-          mediaStream.getTracks().forEach((track) => {
+          mediaStream.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
           });
 
@@ -124,7 +183,10 @@ function CameraModal({ onClose, onCapture }: Props) {
         }
       } catch (error) {
         console.error("カメラ起動エラー:", error);
-        setError("カメラを起動できませんでした。");
+
+        if (active) {
+          setError("カメラを起動できませんでした。");
+        }
       }
     };
 
@@ -132,12 +194,28 @@ function CameraModal({ onClose, onCapture }: Props) {
 
     return () => {
       active = false;
-      stopCamera();
+
+      const stream = streamRef.current;
+
+      if (stream) {
+        stream.getTracks().forEach((track: MediaStreamTrack) => {
+          track.stop();
+        });
+
+        streamRef.current = null;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      }
     };
   }, []);
 
   /*
+   * ========================================
    * モーダルを閉じる
+   * ========================================
    */
   const handleClose = () => {
     stopCamera();
@@ -145,43 +223,17 @@ function CameraModal({ onClose, onCapture }: Props) {
   };
 
   /*
-   * カメラ起動
-   */
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: {
-            ideal: 1920,
-          },
-          height: {
-            ideal: 1080,
-          },
-        },
-        audio: false,
-      });
-
-      streamRef.current = mediaStream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
-      }
-    } catch (error) {
-      console.error("カメラ起動エラー:", error);
-      setError("カメラを起動できませんでした。");
-    }
-  };
-
-  /*
+   * ========================================
    * 写真撮影
+   * ========================================
    */
   const takePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    if (!video || !canvas) return;
+    if (video === null || canvas === null) {
+      return;
+    }
 
     if (video.videoWidth === 0 || video.videoHeight === 0) {
       console.log("カメラ映像の準備ができていません");
@@ -193,8 +245,16 @@ function CameraModal({ onClose, onCapture }: Props) {
 
     const context = canvas.getContext("2d");
 
-    if (!context) return;
+    if (context === null) {
+      return;
+    }
 
+    /*
+     * カメラ映像をそのまま撮影する。
+     *
+     * 実際に送信するときに cropImage() で
+     * 赤枠内だけを切り出す。
+     */
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const image = canvas.toDataURL("image/jpeg", 0.9);
@@ -203,14 +263,23 @@ function CameraModal({ onClose, onCapture }: Props) {
   };
 
   /*
+   * ========================================
    * 撮り直し
+   * ========================================
    */
   const handleRetake = async () => {
+    /*
+     * 現在のカメラをいったん停止
+     */
+    stopCamera();
+
     setCapturedImage(null);
     setIsCropMode(false);
     setIsDragging(false);
 
-    // 初期範囲に戻す
+    /*
+     * 初期範囲に戻す
+     */
     setCrop({
       x: 15,
       y: 10,
@@ -218,11 +287,19 @@ function CameraModal({ onClose, onCapture }: Props) {
       height: 80,
     });
 
+    /*
+     * 少し待ってから再起動
+     *
+     * iPhone などで stream の切り替えが
+     * 安定しやすくなる。
+     */
     await startCamera();
   };
 
   /*
+   * ========================================
    * 範囲選択開始
+   * ========================================
    */
   const handleCropPointerDown = (
     event: React.PointerEvent<HTMLDivElement>,
@@ -242,24 +319,36 @@ function CameraModal({ onClose, onCapture }: Props) {
 
     setIsDragging(true);
 
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // pointer capture が使えない場合は何もしない
+    }
   };
 
   /*
+   * ========================================
    * 範囲選択中の移動
+   * ========================================
    */
   const handleCropPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
 
-    if (!drag) return;
+    if (drag === null) {
+      return;
+    }
 
     const container = event.currentTarget.parentElement;
 
-    if (!container) return;
+    if (container === null) {
+      return;
+    }
 
     const rect = container.getBoundingClientRect();
 
-    if (rect.width === 0 || rect.height === 0) return;
+    if (rect.width === 0 || rect.height === 0) {
+      return;
+    }
 
     // px → %
     const deltaX = ((event.clientX - drag.startX) / rect.width) * 100;
@@ -434,24 +523,26 @@ function CameraModal({ onClose, onCapture }: Props) {
   };
 
   /*
+   * ========================================
    * 範囲選択終了
+   * ========================================
    */
   const handleCropPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (dragRef.current) {
-      dragRef.current = null;
-    }
+    dragRef.current = null;
 
     setIsDragging(false);
 
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
     } catch {
-      // pointer capture が解除済みの場合は何もしない
+      // 既に解除されている場合は何もしない
     }
   };
 
   /*
+   * ========================================
    * 枠内だけを切り出す
+   * ========================================
    */
   const cropImage = async (
     image: string,
@@ -462,6 +553,7 @@ function CameraModal({ onClose, onCapture }: Props) {
 
       img.onload = () => {
         const sourceX = (img.naturalWidth * cropRect.x) / 100;
+
         const sourceY = (img.naturalHeight * cropRect.y) / 100;
 
         const sourceWidth = (img.naturalWidth * cropRect.width) / 100;
@@ -480,7 +572,7 @@ function CameraModal({ onClose, onCapture }: Props) {
 
         const context = canvas.getContext("2d");
 
-        if (!context) {
+        if (context === null) {
           resolve(null);
           return;
         }
@@ -509,28 +601,43 @@ function CameraModal({ onClose, onCapture }: Props) {
   };
 
   /*
+   * ========================================
    * 撮影画像を確定
+   * ========================================
    *
-   * 赤枠内だけを切り出して送る
+   * 赤枠内だけを切り出して送る。
    */
   const handleConfirm = async () => {
-    if (!capturedImage) return;
-
-    const croppedImage = await cropImage(capturedImage, crop);
-
-    if (!croppedImage) {
-      setError("画像の切り出しに失敗しました。");
+    if (capturedImage === null) {
       return;
     }
 
+    const croppedImage = await cropImage(capturedImage, crop);
+
+    if (croppedImage === null) {
+      setError("画像の切り出しに失敗しました。");
+
+      return;
+    }
+
+    /*
+     * ここで BulkInputPage 側へ
+     * 赤枠内だけの画像を渡す。
+     */
     onCapture?.(croppedImage);
 
+    /*
+     * 送信後にカメラ停止
+     */
     stopCamera();
+
     onClose();
   };
 
   /*
+   * ========================================
    * 赤枠のスタイル
+   * ========================================
    */
   const cropStyle: React.CSSProperties = {
     position: "absolute",
@@ -545,7 +652,7 @@ function CameraModal({ onClose, onCapture }: Props) {
   };
 
   /*
-   * リサイズハンドル共通スタイル
+   * リサイズハンドル
    */
   const handleStyle: React.CSSProperties = {
     position: "absolute",
@@ -585,9 +692,11 @@ function CameraModal({ onClose, onCapture }: Props) {
           display: "flex",
           flexDirection: "column",
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
-        {/* 閉じる */}
+        {/* =========================
+            閉じる
+        ========================= */}
         <button
           type="button"
           onClick={handleClose}
@@ -635,7 +744,13 @@ function CameraModal({ onClose, onCapture }: Props) {
           /* =========================
              撮影後
           ========================= */
-          <div>
+          <div
+            style={{
+              width: "100%",
+              overflowY: "auto",
+              maxHeight: "90vh",
+            }}
+          >
             {/* 画像表示エリア */}
             <div
               style={{
@@ -644,7 +759,6 @@ function CameraModal({ onClose, onCapture }: Props) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                overflow: "hidden",
               }}
             >
               {/* 画像 + 赤枠 */}
@@ -847,7 +961,6 @@ function CameraModal({ onClose, onCapture }: Props) {
                     display: "flex",
                     padding: "10px",
                     backgroundColor: "#000",
-                    flexShrink: 0,
                   }}
                 >
                   <button
@@ -883,7 +996,6 @@ function CameraModal({ onClose, onCapture }: Props) {
                     gap: "10px",
                     padding: "15px",
                     backgroundColor: "#000",
-                    flexShrink: 0,
                   }}
                 >
                   <button
@@ -927,7 +1039,6 @@ function CameraModal({ onClose, onCapture }: Props) {
                     display: "flex",
                     padding: "10px",
                     backgroundColor: "#000",
-                    flexShrink: 0,
                   }}
                 >
                   <button
