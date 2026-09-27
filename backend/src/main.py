@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi import Request
 import logging
+from src.utils.testRouter import router as TestRouter
 from src.auth.auth_router import router as AuthRouter
 from src.accounting.accounting_router import router as AccountingRouter
 from src.batch.batch_router import router as BatchRouter
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 logger = logging.getLogger("uvicorn.error")
 
+app.include_router(TestRouter, prefix="/api/test")
 app.include_router(AuthRouter, prefix="/api/auth")
 app.include_router(AccountingRouter, prefix="/api/accounting")
 app.include_router(BatchRouter, prefix="/api/batch")
@@ -31,7 +33,7 @@ app.include_router(BatchRouter, prefix="/api/batch")
 
 @app.get("/")
 def root():
-    print("testAPI")
+    print("FastAPI")
     return {"message": "Hello FastAPI"}
 
 
