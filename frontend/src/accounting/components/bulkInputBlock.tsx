@@ -1,4 +1,3 @@
-import React from "react";
 import TextBox from "../../shared/textBox/textBox";
 import AddSquare from "../../icons/add-square.svg?react";
 import Trash from "../../icons/trash.svg?react";

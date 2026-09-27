@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Drawing from "../../shared/calendar/drawing";
 import Header from "../components/header";
 import SendButton from "../../icons/send.svg?react";

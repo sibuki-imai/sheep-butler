@@ -1,4 +1,3 @@
-import React from "react";
 import Icon from "./icons/mainIcon.svg?react";
 import MenuList from "./shared/hamburgerButton/menuList";
 

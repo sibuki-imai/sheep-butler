@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { IconMap } from "./iconIndex";
 import BackLogo from "../../icons/backLogo.svg?react";
 import ArrowRight from "../../icons/arrowRight.svg?react";

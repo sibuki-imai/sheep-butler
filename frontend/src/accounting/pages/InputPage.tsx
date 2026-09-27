@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import CalendarDrawing from "../../shared/calendar/calendarDrawing";
 import Header from "../components/header";
 import TextBox from "../../shared/textBox/textBox";
