@@ -1,4 +1,3 @@
-import React from "react";
 import MainIcon from "./icons/mainIcon.svg?react";
 import Hamburger from "./icons/hamburger.svg?react";
 import Home from "./icons/categoryIcons/home.svg?react";
