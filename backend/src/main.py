@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -9,11 +10,12 @@ from src.accounting.accounting_router import router as AccountingRouter
 from src.batch.batch_router import router as BatchRouter
 
 app = FastAPI()
+fe_domain = os.getenv("FE_URL")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
+        "fe_domain",
         "https://ascitic-lacy-nonironically.ngrok-free.dev",
     ],
     allow_credentials=True,
