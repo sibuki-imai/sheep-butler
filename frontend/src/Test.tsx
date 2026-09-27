@@ -1,3 +1,5 @@
+import { useState } from "react";
+import axios from "axios";
 import MainIcon from "./icons/mainIcon.svg?react";
 import Hamburger from "./icons/hamburger.svg?react";
 import Home from "./icons/categoryIcons/home.svg?react";
@@ -12,10 +14,31 @@ import TransportationExpenses from "./icons/categoryIcons/train.svg?react";
 import HamburgerButton from "./shared/hamburgerButton/menu";
 import PigBank from "./icons/categoryIcons/pigBank.svg?react";
 function Test() {
+  const [status, setStatus] = useState(0);
+  const check = async () => {
+    try {
+      const result = await axios.get(`/api/test`);
+      console.log("result", result);
+      setStatus(result.status);
+    } catch (e) {
+      console.log("エラー", e);
+      setStatus(999);
+    }
+  };
   return (
     <div style={{ padding: 40 }}>
       <HamburgerButton />
       <h1>テストページ</h1>
+      <div style={{ display: "flex" }}>
+        <button
+          onClick={() => {
+            check();
+          }}
+        >
+          反応チェック
+        </button>
+        <div>{status}</div>
+      </div>
       <div className="bg-red-500 p-8 rounded-xl">TEST</div>
       <div className="flex gap-4 items-center">
         <MainIcon width={48} height={48} className="text-black" />
