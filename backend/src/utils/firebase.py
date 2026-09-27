@@ -1,9 +1,11 @@
+import os
 from fastapi import HTTPException
 import firebase_admin
 from firebase_admin import auth, credentials
 from datetime import timedelta
 
-cred = credentials.Certificate("src/utils/firebase-service-account.json")
+env_cred = os.getenv("CRED")
+cred = credentials.Certificate(env_cred)
 
 firebase_admin.initialize_app(cred)
 
