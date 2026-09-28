@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { IconMap } from "../components/iconIndex";
 import { ResultPopup } from "../../shared/resultPopup/resultPopup";
@@ -16,6 +17,7 @@ type Category = {
 };
 
 function CategoryPage() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selected, setSelected] = useState<Category | null>(null);
   const [popupStatus, setPopupStatus] = useState<number | null>(null);
@@ -30,10 +32,12 @@ function CategoryPage() {
           withCredentials: true,
         });
         setCategories(res.data);
+        console.log("更新");
       } catch (e) {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
           setPopupStatus(401);
           setPopupMessage("再ログインが必要です");
+          navigate("/login");
           return;
         }
         setPopupStatus(500);
@@ -42,7 +46,7 @@ function CategoryPage() {
     };
 
     fetchCategories();
-  });
+  }, []);
 
   // データ編集
   const handleSaveRecord = async (updated: Category) => {
@@ -56,6 +60,7 @@ function CategoryPage() {
       if (axios.isAxiosError(e) && e.response?.status === 401) {
         setPopupStatus(401);
         setPopupMessage("再ログインが必要です");
+        navigate("/login");
         return;
       }
 
@@ -77,6 +82,7 @@ function CategoryPage() {
       if (axios.isAxiosError(e) && e.response?.status === 401) {
         setPopupStatus(401);
         setPopupMessage("再ログインが必要です");
+        navigate("/login");
         return;
       }
 

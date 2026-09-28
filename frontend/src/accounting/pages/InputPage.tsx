@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import CalendarDrawing from "../../shared/calendar/calendarDrawing";
 import Header from "../components/header";
 import TextBox from "../../shared/textBox/textBox";
@@ -9,6 +10,7 @@ import axios from "axios";
 import { ResultPopup } from "../../shared/resultPopup/resultPopup";
 
 function InputPage() {
+  const navigate = useNavigate();
   const [money, setMoney] = useState("");
   const [memo, setMemo] = useState("");
   const [itemName, setItemName] = useState("");
@@ -31,6 +33,7 @@ function InputPage() {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
           setPopupStatus(401);
           setPopupMessage("再ログインが必要です");
+          navigate("/login");
           return;
         }
 
@@ -96,6 +99,7 @@ function InputPage() {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
           setPopupStatus(401);
           setPopupMessage("再ログインが必要です");
+          navigate("/login");
           return;
         }
         if (e instanceof Error) {
