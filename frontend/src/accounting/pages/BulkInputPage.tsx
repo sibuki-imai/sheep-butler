@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Drawing from "../../shared/calendar/drawing";
 import Header from "../components/header";
 import SendButton from "../../icons/send.svg?react";
@@ -17,6 +18,7 @@ type Data = {
 };
 
 function BulkInputPage() {
+  const navigate = useNavigate();
   const [popupStatus, setPopupStatus] = useState<number | null>(null);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -45,6 +47,7 @@ function BulkInputPage() {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
           setPopupStatus(401);
           setPopupMessage("再ログインが必要です");
+          navigate("/login");
           return;
         }
 
@@ -140,6 +143,7 @@ function BulkInputPage() {
       if (axios.isAxiosError(e) && e.response?.status === 401) {
         setPopupStatus(401);
         setPopupMessage("再ログインが必要です");
+        navigate("/login");
         return;
       }
       if (e instanceof Error) {
@@ -203,6 +207,7 @@ function BulkInputPage() {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
           setPopupStatus(401);
           setPopupMessage("再ログインが必要です");
+          navigate("/login");
           return;
         }
         if (e instanceof Error) {

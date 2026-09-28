@@ -94,6 +94,7 @@ function ReportOneCategory() {
       if (axios.isAxiosError(e) && e.response?.status === 401) {
         setPopupStatus(401);
         setPopupMessage("再ログインが必要です");
+        navigate("/login");
         return;
       }
 
@@ -141,6 +142,7 @@ function ReportOneCategory() {
         if (axios.isAxiosError(e) && e.response?.status === 401) {
           setPopupStatus(401);
           setPopupMessage("再ログインが必要です");
+          navigate("/login");
           return;
         }
 
